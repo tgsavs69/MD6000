@@ -33,57 +33,84 @@ void removeLastChar() {
   }
 
 }
+
+
+
+void sendDataToESP() {
+  Serial2.print("blood pressure ");
+  if (systolicReading >= 0 && systolicReading <= 9) {
+    Serial2.print("00");
+  }
+  if (systolicReading >= 10 && systolicReading <= 99) {
+    Serial2.print("0");
+  }
+  Serial2.print(systolicReading);
+  Serial2.print(" ");
+  if (diastolicReading >= 0 && diastolicReading <= 9) {
+    Serial2.print("00");
+  }
+  if (diastolicReading >= 10 && diastolicReading <= 99) {
+    Serial2.print("0");
+  }
+  Serial2.print(diastolicReading);
+  Serial2.print("#");
+
+
+}
+
 void changeMode() {
   Serial.print("current mode -> ");
   Serial.println(currentMode);
 
   switch (currentMode) {
     case 0:
-    {
-      Serial.println("case 0 ");
+      {
 
-      currentMode = 1;
-    
+        int tempReading = currentReading.toInt();
 
-     
+        if (tempReading > 250) {
 
-      currentMode = 1;
-      systolicReading = currentReading;//.toInt();
-      int tempReading = currentReading.toInt();
+          currentReading = "";
+          lcdPrintMessage("Invalid value", "Retype " + mode[currentMode]);
+          delay(4000);
+          lcdPrintMessage("BLOOD PRESSURE", mode[currentMode] + ":" + currentReading);
+          return;
+        }
 
-      if (tempReading > 250) {
-        currentMode = 0;
+        currentMode = 1;
+        systolicReading = currentReading;
         currentReading = "";
-        lcdPrintMessage("Invalid value", "Retype " + mode[currentMode]);
-        delay(4000);
         lcdPrintMessage("BLOOD PRESSURE", mode[currentMode] + ":" + currentReading);
-        return;
+        break;
+
       }
-
-      currentReading = "";
-      lcdPrintMessage("BLOOD PRESSURE", mode[currentMode] + ":" + currentReading);
-       Serial.println("case 0 ");
-      break;
-    
-    }
     case 1:
-      Serial.println("case 1 ");
-      currentMode = 2;
-      diastolicReading =  currentReading;//.toInt();
-      lcdPrintMessage("SYSTOLIC:" + systolicReading, "DIASTOLIC:" + diastolicReading);
-      break;
-
-    case 2:
-      Serial.println("case 2 ");
-      lcdPrintMessage("MD6000", "No messages");
-      isReadingStarted = false;
-      currentMode = 3;
-      break;
+      {
+        Serial.println("case 1 ");
+        currentMode = 2;
+        diastolicReading =  currentReading;//.toInt();
+        long timeOut = millis();
+        lcdPrintMessage("SYSTOLIC:" + systolicReading, "DIASTOLIC:" + diastolicReading);
+        sendDataToESP();
+        while ((millis() - timeOut < 5000) && !keypad.getKey());
+        isReadingStarted = false;
+        currentDisplayOption = 0;
+        break;
+      }
   }
-
-
-
+  /*
+    case 2:
+    Serial.println("case 2 ");
+    lcdPrintMessage("MD6000", "No messages");
+    isReadingStarted = false;
+    currentMode = 3;
+    break;
+  */
 }
+
+
+
+
 
 void readBloodPressure(char key) {
   if (isReadingStarted == false && key == '#') {
