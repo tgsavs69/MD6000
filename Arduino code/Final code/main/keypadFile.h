@@ -7,10 +7,10 @@ char keys[ROWS][COLS] = {
   {'7', '8', '9'},
   {'*', '0', '#'}
 };
-/* sorin
+// sorin
   byte rowPins[ROWS] = {13, 12, 11, 10}; //connect to the row pinouts of the keypad
   byte colPins[COLS] = {9, 8,7}; //connect to the column pinouts of the keypad
-*/
+
 
 
 /* tareq

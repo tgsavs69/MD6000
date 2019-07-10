@@ -2,14 +2,14 @@ extern int currentDisplayOption = 0;
 #include "keypadFile.h"
 #include "lcdFile.h"
 
-long timer = 0;
+//long timer = 0;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   Serial2.begin(9600);
   startLCD();
 
-  timer = millis();
+ // timer = millis();
 }
 bool readBloodPressureActivated = false;
 bool keyboardEnabled = false;
