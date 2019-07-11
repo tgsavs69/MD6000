@@ -39,11 +39,11 @@ class drawer {
 
     void addAlarm(int, int, int);
     void removeAlarm(int, int, int);
-    int  statusDrawer();
+    int  getStatus();
     void takePills();
 
-    int returnNumber();
-    int returnPills();
+    int getID();
+    int getNumberPills();
 
 
     int compareDeadline(int[5]);

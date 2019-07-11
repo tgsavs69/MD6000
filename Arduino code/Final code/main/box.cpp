@@ -55,42 +55,66 @@ void box::addAlarm(int tempDrawer, int tempInterval, int tempNumberOfPills, int 
 }
 
 void box::activate(int tempId) {
+  /*
+    if (tempId <= 0 || tempId > numberOfDrawers) {
+    Serial.println("ID INVALID BOX::ACTIVATED");
+    return -1;
+    }
+    list[tempId-1].activate();
+  */
+
+}
+int box::activated(int tempID) {
+
   for (int i = 0; i < numberOfDrawers; i++) {
-    if (list[i].returnNumber() == tempId) {
-      list[i].activate();
-      return;
+    if (list[i].getID() == tempID) {
+      return list[i].activated();
     }
   }
+  return -1;
+  /*
+    if (tempId <= 0 || tempId > numberOfDrawers) {
+      Serial.println("ID INVALID BOX::ACTIVATED");
+      return -1;
+    }
+    return list[tempId-1].activated();
+  */
 }
-void box::activated() {
+
+
+int box::getNumberPills(int tempID) {
   for (int i = 0; i < numberOfDrawers; i++) {
-    list[i].activated();
+    if (list[i].getID() == tempID) {
+      return list[i].getNumberPills();
+    }
   }
+  return -1;
 }
+
+
+int box::getStatusDrawer(int tempID) {
+  for (int i = 0; i < numberOfDrawers; i++) {
+    if (list[i].getID() == tempID) {
+      return list[i].getStatus();
+    }
+  }
+  return -1;
+}
+
 
 void box::alarmActivated(int *tempStateDrawers) {
 
 
   for (int i = 0; i < numberOfDrawers; i++) {
-    tempStateDrawers[i] =  list[i].statusDrawer();
-    /*
-        tempStateDrawers[i] = 0;
-        if ( list[i].alarmActivated() != 0) {
-          tempStateDrawers[i] = 1;
-          //return list[i].returnNumber();
-        }
-      }
-    */
-
-
+    tempStateDrawers[i] =  list[i].getStatus();
   }
 }
 
 
-  drawer box::returnDrawer(int tempId) {
-    for (int i = 0; i < numberOfDrawers; i++) {
-      if (list[i].returnNumber() == tempId) {
-        return list[i];
-      }
+drawer box::returnDrawer(int tempId) {
+  for (int i = 0; i < numberOfDrawers; i++) {
+    if (list[i].getID() == tempId) {
+      return list[i];
     }
   }
+}

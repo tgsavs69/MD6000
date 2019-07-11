@@ -14,8 +14,11 @@ class box {
     //void addDrawer(/*number*/int, /*pinLed*/ int, /*pinSwitch*/ int, /*deadline*/ int[5]);
     void displayBox();
     void activate(int);
-    void activated();
+    int activated(int);
     void alarmActivated(int*);
+
+    int getStatusDrawer(int);
+    int getNumberPills(int);
     void addAlarm(int, int, int, int);
 
     drawer returnDrawer(int);

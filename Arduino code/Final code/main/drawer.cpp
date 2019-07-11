@@ -29,6 +29,7 @@ void drawer::clone(int tempNumber, int tempLed, int tempSwitch, int tempInterval
 
   pinLed = tempLed;
   pinMode(pinLed, OUTPUT);
+  Serial.println("am oprit led-ul din close");
   digitalWrite(pinLed, LOW);
 
 
@@ -64,13 +65,6 @@ void drawer::activate() {
 
 int drawer::activated() {
   int buttonState = digitalRead(pinSwitch);
-  if (buttonState == LOW) {
-    digitalWrite(pinLed, HIGH);
-  }
-  if (buttonState == HIGH) {
-    digitalWrite(pinLed, LOW);
-  }
-
   return buttonState;
 }
 
@@ -91,11 +85,11 @@ void drawer::displayDrawer() {
   Serial.print(startingHour);
 }
 
-int drawer::returnNumber() {
+int drawer::getID() {
   return number;
 }
 
-int drawer::returnPills() {
+int drawer::getNumberPills() {
   return numberOfPills;
 }
 
@@ -116,29 +110,46 @@ void drawer::addAlarm(int tempInterval, int tempNumberOfPills, int tempStartingH
 }
 
 
-int drawer::statusDrawer() {
+int drawer::getStatus() {
   int tempStatus = 0;
+  if (alarmTriggered == true) {
+    tempStatus = 1;
+  }
+  if (drawerOpen == 1) {
+    tempStatus = 3;
+  }
+
   if (hour() == startingHour && alarmTriggered == false) {
+
     tempStatus = 1; //the alarm is triggered
     digitalWrite(pinLed, HIGH);
     alarmTriggered = true;
+  
   }
   if (minute() >= 30 && alarmTriggered == true) {
+
     tempStatus = 2; //alarm is triggered and the pill is not taken for 30 minutes
   }
 
-  if(drawerOpen == 0 && digitalRead(pinSwitch) == 0){
+  if (drawerOpen == 0 && digitalRead(pinSwitch) == 0) {
+
     tempStatus = 3; // the drawer is opened
     drawerOpen = 1;
   }
+
   if (drawerOpen == 1 && alarmTriggered == true && digitalRead(pinSwitch) == 1) {
-    tempStatus = 4; //tje pill is taken
+    tempStatus = 4; //the pill is taken
+    drawerOpen = 0;
     alarmTriggered = false;
+    activate();
+    digitalWrite(pinLed, LOW);
+
   }
 
 
+
   return tempStatus;
-  
+
 
   /*
     if (hour() == startingHour) {

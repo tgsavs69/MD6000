@@ -29,7 +29,9 @@ int switches[] = {/*drawer1*/ 35,/*drawer2*/ 31,/*drawer3*/ 29,/*drawer4*/ 27,/*
 SoftwareSerial mySerial(8, 9);
 
 drawer test;
+int skipTime = A15;
 void setup() {
+  pinMode(skipTime, INPUT_PULLUP);
 
   /*start the serial communication with the ESP8266*/
   mySerial.begin(115200);
@@ -49,7 +51,7 @@ void setup() {
   Serial.println(F("DFPlayer Mini online."));
 
   myDFPlayer.setTimeOut(500); //Set serial communictaion time out 500ms
-  myDFPlayer.volume(10);  //Set volume value (0~30).
+  myDFPlayer.volume(20);  //Set volume value (0~30).
 
 
   startLCD();
@@ -88,6 +90,68 @@ void setup() {
     drawerPills.displayBox();
   */
 }
+
+void makeAnnouncement() {
+  myDFPlayer.playMp3Folder(0000);
+  while (keypad.getKey() != '*') {
+    if (myDFPlayer.available()) {
+      if (myDFPlayer.readType() == DFPlayerPlayFinished) {
+        Serial.println("Announcement finished");
+        //break;
+      }
+    }
+  }
+}
+
+/*
+  void sayDrawer(int idDrawer) {
+  myDFPlayer.playMp3Folder(idDrawer);
+
+  while (drawerPills.activated(idDrawer) == 1) {
+    if (myDFPlayer.available()) {
+      if (myDFPlayer.readType() == DFPlayerPlayFinished) {
+        Serial.println("Open drawer announcement finished");
+      }
+    }
+  }
+  Serial.print("Drawer ");
+  Serial.print(idDrawer);
+  Serial.println(" opened");
+  drawerPills.activate(idDrawer);
+  }*/
+
+
+
+
+void proccessDrawer(int idDrawer) {
+  myDFPlayer.playMp3Folder(idDrawer);
+
+  while (drawerPills.getStatusDrawer(idDrawer) == 1 || drawerPills.getStatusDrawer(idDrawer) == 2) {
+    if (myDFPlayer.available()) {
+      if (myDFPlayer.readType() == DFPlayerPlayFinished) {
+        Serial.println("Open drawer announcement finished");
+      }
+    }
+  }
+
+  int numberOfPills = drawerPills.getNumberPills(idDrawer);
+  myDFPlayer.playMp3Folder(10 + numberOfPills);
+  while (drawerPills.getStatusDrawer(idDrawer) == 3) {
+    if (myDFPlayer.available()) {
+      if (myDFPlayer.readType() == DFPlayerPlayFinished) {
+        Serial.println("Number of pills finished");
+      }
+    }
+
+  }
+  while (drawerPills.getStatusDrawer(idDrawer) == 4);
+  while (drawerPills.getStatusDrawer(idDrawer) != 0);
+
+
+
+  // Serial.println("exited proccessDrawer");
+}
+
 /*
   void takeMedicine() {
 
@@ -183,6 +247,9 @@ bool keyboardEnabled = false;
 int lastOption = -1;
 bool onlyOnce = false;
 
+bool announcement = false;
+
+
 
 void loop() {
 
@@ -195,33 +262,82 @@ void loop() {
     }
   }
 
-  if (second() == 20 && minute() < 30) {
-    setTime(hour(), 29, 55, 1, 1, 11);
+
+  /*
+    if (second() == 20 && minute() < 30) {
+      setTime(hour(), 59, 55, 1, 1, 11);
+    }
+
+    // if (second() == 20 && minute() > 30) {
+    //   setTime(hour(), 59, 55, 1, 1, 11);
+    //  }
+
+  */
+
+
+  if (digitalRead(skipTime) == 0) {
+    if (minute() + 20 > 60)
+      setTime(hour() + 1, 0, second(), day(), month(), year());
+    else {
+      setTime(hour(), minute() + 20, second(), day(), month(), year());
+    }
+    digitalClockDisplay();
+    delay(2000);
   }
-
-  if (second() == 20 && minute() > 30) {
-    setTime(hour(), 59, 55, 1, 1, 11);
-  }
-
-
-
   digitalClockDisplay();
 
-  int stateDrawers[6];
-  drawerPills.alarmActivated(stateDrawers);
-  Serial.println("State of drawers");
-  for (int i = 0; i < numberOfDrawers; i++) {
-    Serial.print(" Drawer ");
-    Serial.print(i);
-    Serial.print(" -> ");
-    Serial.print(stateDrawers[i]);
-  }
-  Serial.println();
-  /*
-    if ( drawerPills.alarmActivated() != 0) {
-      Serial.println("Setting currentDisplayOption = 2");
-      currentDisplayOption = 2;
+
+  bool allPillsTaken = true;
+  for (int i = 1; i <= numberOfDrawers; i++) {
+
+    if (drawerPills.getStatusDrawer(i) != 0) {
+
+      if (announcement == false) {
+        announcement = true;
+        makeAnnouncement();
+      }
+      allPillsTaken = false;
+      proccessDrawer(i);
     }
+  }
+
+  if (allPillsTaken == true) {
+    announcement = false;
+  }
+
+  /*
+    int stateDrawers[6];
+
+    drawerPills.alarmActivated(stateDrawers);
+    bool allPillsTaken = true;
+    for (int i = 0; i < numberOfDrawers; i++) {
+      if (stateDrawers[i] != 0 ) {
+        allPillsTaken = false;
+      }
+
+      if (stateDrawers[i] == 1) {
+
+        if (announcement == false) {
+          announcement = true;
+          makeAnnouncement();
+        }
+        Serial.println("Zi ba drawer");
+        sayDrawer(i + 1);
+
+      }
+
+
+    }
+
+    if (allPillsTaken == true) {
+      announcement = false;
+    }
+
+    /*
+      if ( drawerPills.alarmActivated() != 0) {
+        Serial.println("Setting currentDisplayOption = 2");
+        currentDisplayOption = 2;
+      }
   */
 
   /*
@@ -272,7 +388,7 @@ void loop() {
     Serial.println(currentDisplayOption);
     lastOption = currentDisplayOption;
     switch (currentDisplayOption) {
-      case 0: lcdPrintMessage("MD6000", "NO MESSAGES"); keyboardEnabled = false; break;
+      case 0: lcdPrintMessage("MD6000",  "NO MESSAGES"); keyboardEnabled = false; break;
       case 1: lcdPrintMessage("MEASURE", "BLOOD PRESSURE"); keyboardEnabled = true; break;
         //  case 2: lcdPrintMessage("IT IS TIME", "TO TAKE YOUR MEDICINE");  takeMedicine(); break;
 
@@ -297,17 +413,19 @@ void loop() {
 
 void digitalClockDisplay()
 {
+  lcd.setCursor(10, 0);
   // digital clock display of the time
-  Serial.print(hour());
+  printDigits(hour());
+  lcd.print(":");
   printDigits(minute());
-  printDigits(second());
-  Serial.println();
+  // printDigits(second());
+  // Serial.println();
 }
 
 void printDigits(int digits)
 {
-  Serial.print(":");
+
   if (digits < 10)
-    Serial.print('0');
-  Serial.print(digits);
+    lcd.print('0');
+  lcd.print(digits);
 }
